@@ -26,7 +26,7 @@ void send_val(int iv_sens_nbr, float iv_value) {
   // This will send the request to the server
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                "Host: " + weather_host + "\r\n" +
-               "Authorization: Basic aXA6ZGltcHdmaXUwNw==\r\n" +
+               "Authorization: Basic " + weather_auth + "\r\n" +
                "Connection: close\r\n\r\n");
   delay(10);
 
@@ -65,7 +65,7 @@ void send_val24(int iv_sens_nbr, int iv_sens_nbr1) {
   // This will send the request to the server
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                "Host: " + weather_host + "\r\n" +
-               "Authorization: Basic" + weather_auth + "\r\n" +
+               "Authorization: Basic " + weather_auth + "\r\n" +
                "Connection: close\r\n\r\n");
   delay(10);
 
