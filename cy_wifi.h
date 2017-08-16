@@ -44,6 +44,11 @@ void wifi_init(char *iv_APname) {
     delay(5000);
   }
 
+
+  // Force to station mode because if device was switched off while in access point mode it will start up next time in access point mode.
+  // see also https://github.com/tzapu/WiFiManager/issues/229#issuecomment-253360552
+   WiFi.mode(WIFI_STA); 
+
   //if you get here you have connected to the WiFi
   DebugPrintln("connected to " + WiFi.SSID() + " ...yeey");
 
