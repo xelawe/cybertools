@@ -1,6 +1,6 @@
 #include <ArduinoOTA.h>
 
-void init_ota(char *iv_hostname) {
+void init_ota(const char *iv_hostname) {
 
   ArduinoOTA.onStart([]() {
     Serial.println("Start OTA");

@@ -12,7 +12,7 @@ void WifimanAPcb (WiFiManager *myWiFiManager) {
 }
 
 
-void wifi_init(char *iv_APname) {
+void wifi_init(const char *iv_APname) {
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
