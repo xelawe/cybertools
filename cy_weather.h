@@ -2,7 +2,11 @@
 
 #include "cy_weather_cfg.h"
 
-void send_val(int iv_sens_nbr, float iv_value) {
+
+
+void send_val(int iv_sens_nbr, float iv_value, boolean iv_test) {
+  String url;
+
   DebugPrint("connecting to ");
   DebugPrintln(weather_host);
 
@@ -15,7 +19,11 @@ void send_val(int iv_sens_nbr, float iv_value) {
   }
 
   // We now create a URI for the request
-  String url = "/ip/weather_upd?station=1&sensor=";
+  if ( iv_test == false ){
+    url = "/ip/weather_upd?station=1&sensor=";
+  } else {
+    url = "/ip/weather_upd_test?station=1&test=1&sensor=";
+  }
   url += iv_sens_nbr;
   url += "&value=";
   url += iv_value;
@@ -38,6 +46,10 @@ void send_val(int iv_sens_nbr, float iv_value) {
 
   DebugPrintln();
   DebugPrintln("closing connection");
+}
+
+void send_val(int iv_sens_nbr, float iv_value) {
+  send_val(iv_sens_nbr, iv_value, false);
 }
 
 void send_val24(int iv_sens_nbr, int iv_sens_nbr1) {
