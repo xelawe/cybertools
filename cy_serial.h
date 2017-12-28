@@ -9,12 +9,12 @@
 #define DebugPrintln(...) { }
 #endif
 
-void init_serial(){
+void init_serial(char *iv_file){
 #ifdef serdebug
   Serial.begin(115200);
 #endif
 
-  DebugPrintln("\n" + String(__DATE__) + ", " + String(__TIME__) + " " + String(__FILE__));
+  DebugPrintln("\n" + String(__DATE__) + ", " + String(__TIME__) + " " + String(iv_file) ); //String(__FILE__));
 }
 
 #endif

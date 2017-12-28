@@ -2,10 +2,9 @@
 #define cy_wunderg_h
 // Routines to post Data to Weather underground
 
+
 #include "Arduino.h"
 #include <ESP8266WiFi.h>
-
-
 
 #define serdebug
 #ifdef serdebug
@@ -24,6 +23,7 @@ class cy_wunderg
 	  void send_val( char *iv_field, float iv_value );
 	  void send_temp_f( float iv_tempf );
 	  void send_temp_c( float iv_tempc );
+    void send_hum( float iv_hum);
   private:
     const char *_gv_host;
     const char *_gv_sid;

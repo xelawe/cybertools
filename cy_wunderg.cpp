@@ -68,3 +68,6 @@ void cy_wunderg::send_temp_c( float iv_tempc ){
 	send_temp_f( lv_tempf );
 }
 
+void cy_wunderg::send_hum( float iv_hum){
+		send_val( "humidity", iv_hum);
+}
