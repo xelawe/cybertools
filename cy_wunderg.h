@@ -5,6 +5,7 @@
 
 #include "Arduino.h"
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 
 #define serdebug
 #ifdef serdebug
@@ -24,6 +25,8 @@ class cy_wunderg
 	  void send_temp_f( float iv_tempf );
 	  void send_temp_c( float iv_tempc );
     void send_hum( float iv_hum);
+    void send_press_in( float iv_press );
+    void send_press_hpa( float iv_press );
   private:
     const char *_gv_host;
     const char *_gv_sid;

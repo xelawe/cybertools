@@ -1,4 +1,4 @@
-#include "Arduino.h"
+//#include "Arduino.h"
 #include "cy_wunderg.h"
 
 // Routines to post Data to Weather underground
@@ -24,7 +24,7 @@ void cy_wunderg::send_val( char *iv_field, float iv_value ){
   }
 
   // We now create a URI for the request
-  url = "/weatherstation/updateweatherstation.php?ID=";
+  url = "/weatherstation/updateweatherstation.php?action=updateraw&ID=";
   url += _gv_sid;
   url += "&PASSWORD=";
   url += _gv_pwd;
@@ -32,8 +32,6 @@ void cy_wunderg::send_val( char *iv_field, float iv_value ){
   url += iv_field;
   url += "=";
   url += iv_value;
-  url += "&action=updateraw";
-
 
   DebugPrint("Requesting URL: ");
   DebugPrintln(url);
@@ -70,4 +68,12 @@ void cy_wunderg::send_temp_c( float iv_tempc ){
 
 void cy_wunderg::send_hum( float iv_hum){
 		send_val( "humidity", iv_hum);
+}
+
+void cy_wunderg::send_press_in( float iv_press ){
+	send_val( "baromin", iv_press);
+}
+
+void cy_wunderg::send_press_hpa( float iv_press ){
+  float lv_press_in = iv_press  * 0.02953;
 }
