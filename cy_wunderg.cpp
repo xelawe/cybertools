@@ -1,9 +1,8 @@
-//#include "Arduino.h"
 #include "cy_wunderg.h"
 
 // Routines to post Data to Weather underground
 
-cy_wunderg::cy_wunderg(const char *iv_host, const char *iv_sid, const char *iv_pwd){
+cy_wunderg::cy_wunderg(const char *iv_host, const char *iv_sid, const char *iv_pwd, boolean iv_temp){
 	_gv_host = iv_host;
 		_gv_sid = iv_sid;
 		_gv_pwd = iv_pwd;
@@ -101,4 +100,12 @@ void cy_wunderg::send_press_in( float iv_press ){
 
 void cy_wunderg::send_press_hpa( float iv_press ){
   float lv_press_in = iv_press  * 0.02953;
+}
+
+void cy_wunderg::set_temp_f( float iv_temp ){
+	_gv_temp = iv_temp;
+}
+
+void cy_wunderg::set_temp_c( float iv_temp ){
+	_gv_temp = ( iv_temp * 1.8 ) + 32;
 }

@@ -4,8 +4,10 @@
 #include <PubSubClient.h>
 #include <LinkedList.h>
 #include "cy_mqtt_cfg.h"
+#include <cy_serial.h>
 
 const char* mqtt_clientname;
+long lastReconnectAttempt = 0;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -30,7 +32,6 @@ void add_subtopic(const char* iv_subtopic, MQTT_CALLBACK_SIGNATURE) {
   lv_SubTopic->callback = callback;
   // add to list
   gv_SubTopicList.add(lv_SubTopic);
-
 }
 
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
@@ -56,17 +57,20 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     else {
       DebugPrintln("no Callback ");
     }
-
   }
-
 }
 
-void reconnect_mqtt() {
-  // Loop until we're reconnected
-  //while (!client.connected()) {
+boolean reconnect_mqtt() {
+  String lv_lwt;
+  char c[20];
+
   DebugPrint("Attempting MQTT connection...");
   // Attempt to connect
-  if (client.connect(mqtt_clientname)) {
+  lv_lwt = mqtt_clientname;
+  lv_lwt += "/LWT";
+  lv_lwt.toCharArray(c, sizeof(c));
+
+  if (client.connect(mqtt_clientname, c, 0, true, "offline")) {
     DebugPrintln("connected");
     // Once connected, publish an announcement, retained
     //client.publish(mqtt_pubtopic, "hello world");
@@ -78,9 +82,33 @@ void reconnect_mqtt() {
       lv_SubTopic = gv_SubTopicList.get(i);
       client.subscribe(lv_SubTopic->topic);
     }
+    return true;
   } else {
     DebugPrint("failed, rc=");
     DebugPrintln(client.state());
+    return false;
+  }
+}
+
+boolean check_mqtt_conn() {
+  if (!client.connected()) {
+    long now = millis();
+    if (now - lastReconnectAttempt > 5000) {
+      lastReconnectAttempt = now;
+      // Attempt to reconnect
+      if (reconnect_mqtt())
+        lastReconnectAttempt = 0;
+    }
+    return client.connected();
+  } else {
+    return true;
+  }
+}
+
+
+void check_mqtt() {
+  if (check_mqtt_conn() == true) {
+    client.loop();
   }
 }
 
@@ -90,13 +118,7 @@ void init_mqtt(const char* iv_clientname) {
 
   client.setServer(mqtt_server, 1883);
   client.setCallback(mqtt_callback);
-}
-
-void check_mqtt() {
-  if (!client.connected()) {
-    reconnect_mqtt();
-  }
-  client.loop();
+  check_mqtt_conn();
 }
 
 #endif

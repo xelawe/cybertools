@@ -1,5 +1,7 @@
-#ifndef cy_serial
-#define cy_serial
+#ifndef cy_serial_h
+#define cy_serial_h
+
+#include "Arduino.h"
 
 #ifdef serdebug
 #define DebugPrint(...) {  Serial.print(__VA_ARGS__); }
@@ -9,12 +11,11 @@
 #define DebugPrintln(...) { }
 #endif
 
-void init_serial(char *iv_file){
-#ifdef serdebug
-  Serial.begin(115200);
-#endif
+class cy_serial{
+	public:
+      static void init(char *iv_file);
+};
 
-  DebugPrintln("\n" + String(__DATE__) + ", " + String(__TIME__) + " " + String(iv_file) ); //String(__FILE__));
-}
+
 
 #endif
