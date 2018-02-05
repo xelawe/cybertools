@@ -1,8 +1,4 @@
-#include <cy_serial.h>
+//#include "cy_serial.h"
 
-void cy_serial::init(char *iv_file){
-#ifdef serdebug
-  Serial.begin(115200);
-#endif
-  DebugPrintln("\n" + String(__DATE__) + ", " + String(__TIME__) + " " + String(iv_file) ); //String(__FILE__));
-}
+/* all functions have to be defied in .h because auf macro definition and Arduino Preprocessor */
+/* maybe moving everything to cpp would be better, but for the moment ... */

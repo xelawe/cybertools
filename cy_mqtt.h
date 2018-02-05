@@ -62,18 +62,18 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 
 boolean reconnect_mqtt() {
   String lv_lwt;
-  char c[20];
+  char lv_lwtc[20];
 
   DebugPrint("Attempting MQTT connection...");
   // Attempt to connect
   lv_lwt = mqtt_clientname;
   lv_lwt += "/LWT";
-  lv_lwt.toCharArray(c, sizeof(c));
+  lv_lwt.toCharArray(lv_lwtc, sizeof(lv_lwtc));
 
-  if (client.connect(mqtt_clientname, c, 0, true, "offline")) {
+  if (client.connect(mqtt_clientname, mqtt_user, mqtt_pass, lv_lwtc, 0, true, "offline")) {
     DebugPrintln("connected");
     // Once connected, publish an announcement, retained
-    //client.publish(mqtt_pubtopic, "hello world");
+    client.publish(lv_lwtc, "online", true);
 
     MQTTSubTopic *lv_SubTopic;
     for (int i = 0; i < gv_SubTopicList.size(); i++) {
@@ -81,6 +81,8 @@ boolean reconnect_mqtt() {
       // ... and resubscribe
       lv_SubTopic = gv_SubTopicList.get(i);
       client.subscribe(lv_SubTopic->topic);
+	    DebugPrint("Subscribed: ");
+    DebugPrintln(lv_SubTopic->topic);	
     }
     return true;
   } else {
@@ -107,7 +109,8 @@ boolean check_mqtt_conn() {
 
 
 void check_mqtt() {
-  if (check_mqtt_conn() == true) {
+  if (check_mqtt_conn()) {
+	  //DebugPrintln("MQTT loop");
     client.loop();
   }
 }
@@ -118,7 +121,7 @@ void init_mqtt(const char* iv_clientname) {
 
   client.setServer(mqtt_server, 1883);
   client.setCallback(mqtt_callback);
-  check_mqtt_conn();
+  //check_mqtt_conn();
 }
 
 #endif
