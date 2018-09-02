@@ -5,7 +5,7 @@
 #include <LinkedList.h>
 #include "cy_mqtt_cfg.h"
 #include <cy_serial.h>
-
+ 
 const char* mqtt_clientname;
 long lastReconnectAttempt = 0;
 
@@ -62,7 +62,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 
 boolean reconnect_mqtt() {
   String lv_lwt;
-  char lv_lwtc[20];
+  char lv_lwtc[40];
 
   DebugPrint("Attempting MQTT connection...");
   // Attempt to connect
@@ -89,17 +89,22 @@ boolean reconnect_mqtt() {
     DebugPrint("failed, rc=");
     DebugPrintln(client.state());
     return false;
-  }
+  } 
 }
 
 boolean check_mqtt_conn() {
   if (!client.connected()) {
     long now = millis();
+	// Last connection attempt more than 5 secs in past?  
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
       // Attempt to reconnect
-      if (reconnect_mqtt())
+      if (reconnect_mqtt()){
+		// if connection lost later: try immediately to connect
         lastReconnectAttempt = 0;
+	  } else {
+		  //
+	  }
     }
     return client.connected();
   } else {
