@@ -88,6 +88,7 @@ void wifi_init(const char *iv_APname) {
 
   //if you get here you have connected to the WiFi
   DebugPrintln("connected to " + WiFi.SSID() + " ...yeey");
+  //DebugPrintln("IP " + WiFi.localIP() );
 
 }
 

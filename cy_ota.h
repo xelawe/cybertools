@@ -1,4 +1,8 @@
+#ifndef CY_OTA_TOOL_H
+#define CY_OTA_TOOL_H
+
 #include <ArduinoOTA.h>
+#include "cy_ota_cfg.h"
 
 void init_ota(const char *iv_hostname) {
 
@@ -20,6 +24,7 @@ void init_ota(const char *iv_hostname) {
     else if (error == OTA_END_ERROR) Serial.println("End Failed");
   });
   ArduinoOTA.setHostname(iv_hostname);
+  ArduinoOTA.setPassword(ota_pass); //WA181231
   ArduinoOTA.begin();
 
 }
@@ -29,3 +34,4 @@ void check_ota(){
   ArduinoOTA.handle();
 }
 
+#endif
