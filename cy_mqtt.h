@@ -8,9 +8,64 @@
  
 const char* mqtt_clientname;
 long lastReconnectAttempt = 0;
+boolean gv_mqtt_conn_ok = true;
+boolean gv_reconnect_fail = false;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+
+const char MQTT_TOKEN_PREFIX[] PROGMEM = "%prefix%";  // To be substituted by mqtt_prefix[x]
+const char MQTT_TOKEN_TOPIC[] PROGMEM = "%topic%";    // To be substituted by mqtt_topic, mqtt_grptopic, mqtt_buttontopic, mqtt_switchtopic
+
+const uint16_t MQTT_TOPSZ = 151;                 // Max number of characters in topic string
+const uint16_t MQTT_CMDSZ = 24;                  // Max number of characters in command
+
+char* mqtt_GetTopic_P(char *stopic, uint32_t prefix, char *topic, const char* subtopic)
+{
+  /* prefix 0 = Cmnd
+     prefix 1 = Stat
+     prefix 2 = Tele
+     prefix 4 = Cmnd fallback
+     prefix 5 = Stat fallback
+     prefix 6 = Tele fallback
+     prefix 8 = Cmnd topic
+     prefix 9 = Stat topic
+     prefix 10 = Tele topic
+  */
+  char romram[MQTT_CMDSZ];
+  String fulltopic;
+
+  snprintf_P(romram, sizeof(romram), subtopic);
+
+  fulltopic = F("%topic%/%prefix%/"); //SettingsText(SET_MQTT_FULLTOPIC);
+
+  switch (prefix) {
+    case 0:
+      fulltopic.replace(FPSTR(MQTT_TOKEN_PREFIX), F("cmnd") );//SettingsText(SET_MQTTPREFIX1 + prefix));
+      break;
+    case 1:
+      fulltopic.replace(FPSTR(MQTT_TOKEN_PREFIX), F("stat") );//SettingsText(SET_MQTTPREFIX1 + prefix));
+      break;
+    case 2:
+      fulltopic.replace(FPSTR(MQTT_TOKEN_PREFIX), F("tele") );//SettingsText(SET_MQTTPREFIX1 + prefix));
+      break;
+  }
+
+  fulltopic.replace(FPSTR(MQTT_TOKEN_TOPIC), topic);
+
+  fulltopic.replace(F("#"), "");
+  fulltopic.replace(F("//"), "/");
+
+  if (!fulltopic.endsWith("/")) {
+    fulltopic += "/";
+  }
+
+  snprintf_P(stopic, MQTT_TOPSZ, PSTR("%s%s"), fulltopic.c_str(), romram);
+  return stopic;
+
+}
+
 
 // Class for SubTopics
 class MQTTSubTopic {
@@ -35,7 +90,7 @@ void add_subtopic(const char* iv_subtopic, MQTT_CALLBACK_SIGNATURE) {
 }
 
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
-  DebugPrint("Message arrived [");
+  DebugPrint(F("Message arrived ["));
   DebugPrint(topic);
   DebugPrint("] ");
   for (int i = 0; i < length; i++) {
@@ -50,12 +105,12 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
     lv_SubTopic = gv_SubTopicList.get(i);
     DebugPrintln(lv_SubTopic->topic);
     if (strcmp(lv_SubTopic->topic, topic) == 0) {
-      DebugPrint("start Callback ");
+      DebugPrint(F("start Callback "));
       DebugPrintln(i);
       lv_SubTopic->callback(topic, payload, length);
     }
     else {
-      DebugPrintln("no Callback ");
+      DebugPrintln(F("no Callback "));
     }
   }
 }
@@ -64,14 +119,14 @@ boolean reconnect_mqtt() {
   String lv_lwt;
   char lv_lwtc[40];
 
-  DebugPrint("Attempting MQTT connection...");
+  DebugPrint(F("Attempting MQTT connection..."));
   // Attempt to connect
   lv_lwt = mqtt_clientname;
   lv_lwt += "/LWT";
   lv_lwt.toCharArray(lv_lwtc, sizeof(lv_lwtc));
 
   if (client.connect(mqtt_clientname, mqtt_user, mqtt_pass, lv_lwtc, 0, true, "offline")) {
-    DebugPrintln("connected");
+    DebugPrintln(F("connected"));
     // Once connected, publish an announcement, retained
     client.publish(lv_lwtc, "online", true);
 
@@ -95,16 +150,17 @@ boolean reconnect_mqtt() {
 boolean check_mqtt_conn() {
   if (!client.connected()) {
     long now = millis();
-	// Last connection attempt more than 5 secs in past?  
+    gv_reconnect_fail = false;
+	  // Last connection attempt more than 5 secs in past?  
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
       // Attempt to reconnect
       if (reconnect_mqtt()){
-		// if connection lost later: try immediately to connect
+		    // if connection lost later: try immediately to connect
         lastReconnectAttempt = 0;
-	  } else {
-		  //
-	  }
+      } else {
+        gv_reconnect_fail = true;
+      }
     }
     return client.connected();
   } else {
@@ -115,10 +171,25 @@ boolean check_mqtt_conn() {
 
 void check_mqtt() {
   if (check_mqtt_conn()) {
+	  gv_mqtt_conn_ok = true;
 	  //DebugPrintln("MQTT loop");
     client.loop();
+  } else {
+	  gv_mqtt_conn_ok = false;
   }
 }
+
+
+void check_mqtt_reset() {
+  check_mqtt();
+  // connsection lost an reconnect after 5 seconds failed?
+	 if ( !gv_mqtt_conn_ok && gv_reconnect_fail ){
+     // restart
+     ESP.restart();
+     delay(2000);
+   }
+}
+
 
 void init_mqtt(const char* iv_clientname) {
   DebugPrintln(F("init MQTT ...."));
