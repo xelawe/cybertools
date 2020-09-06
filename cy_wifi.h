@@ -8,8 +8,8 @@
 
 String clientName;
 char *gv_clientname;
-boolean gv_noconn_reset = true;
-int gv_portal_timeout = 180;
+boolean gv_noconn_reset;
+int gv_portal_timeout;
 
 
 String macToStr(const uint8_t* mac)
@@ -46,7 +46,8 @@ void WifimanAPcb (WiFiManager *myWiFiManager) {
 }
 
 
-void wifi_init(const char *iv_APname) {
+
+void wifi_init(const char *iv_APname, int iv_portal_timeout, boolean iv_noconn_reset){
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
@@ -54,7 +55,10 @@ void wifi_init(const char *iv_APname) {
 #else
   wifiManager.setDebugOutput(false);
 #endif
-
+	
+  gv_portal_timeout = iv_portal_timeout;
+  gv_noconn_reset = iv_noconn_reset;
+	
   get_clientname( iv_APname );
   DebugPrint("clientname: ");
   DebugPrintln(gv_clientname);
@@ -97,6 +101,11 @@ void wifi_init(const char *iv_APname) {
   //DebugPrintln("IP " + WiFi.localIP() );
 
 }
+
+void wifi_init(const char *iv_APname) {
+	wifi_init( iv_APname, 180, true);
+}
+	
 
 void check_wifi_conn() {
   while (WiFi.status() != WL_CONNECTED) {
