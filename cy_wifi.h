@@ -8,6 +8,8 @@
 
 String clientName;
 char *gv_clientname;
+boolean gv_noconn_reset = true;
+int gv_portal_timeout = 180;
 
 
 String macToStr(const uint8_t* mac)
@@ -65,7 +67,7 @@ void wifi_init(const char *iv_APname) {
   //sets timeout until configuration portal gets turned off
   //useful to make it all retry or go to sleep
   //in seconds
-  wifiManager.setTimeout(180);
+  wifiManager.setTimeout(gv_portal_timeout);
 
   DebugPrintln("WiFi: wait to connect");
 
@@ -77,9 +79,13 @@ void wifi_init(const char *iv_APname) {
   if (!wifiManager.autoConnect(iv_APname)) {
     DebugPrintln("failed to connect and hit timeout");
     delay(1000);
+	  if (gv_noconn_reset == true ){
     //reset and try again, or maybe put it to deep sleep
     ESP.reset();
-    delay(5000);
+   delay(5000);
+	  } else {	  
+	  return;
+		  }
   }
 
   // Force to station mode because if device was switched off while in access point mode it will start up next time in access point mode.
