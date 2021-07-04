@@ -20,15 +20,16 @@ class cy_serial{
   public:
    // static  void start(HardwareSerial* iv_ser, char *iv_file){
     static  void start(char *iv_file){
-		#ifdef serdebug
+	#ifdef serdebug
 	/* serdebug defined cpp*/
-		Serial.begin(115200);
+	  	Serial.begin(115200);
   //iv_ser->begin(115200);
-  Serial.println("\n\n" + String(__DATE__) + ", " + String(__TIME__) + " " + String(iv_file) + "\n");
+                Serial.println();
+  		Serial.println("\n\n" + String(__DATE__) + ", " + String(__TIME__) + " " + String(iv_file) + "\n");
   //iv_ser->println("\n\n" + String(__DATE__) + ", " + String(__TIME__) + " " + String(iv_file) + "\n");		
 	#else
 /* serdebug not defined cpp*/
-#endif
+	#endif
 }
 
 };

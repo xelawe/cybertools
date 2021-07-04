@@ -5,8 +5,10 @@
 #include <LinkedList.h>
 #include "cy_mqtt_cfg.h"
 #include <cy_serial.h>
+#include <ArduinoJson.h>
  
 const char* mqtt_clientname;
+
 long lastReconnectAttempt = 0;
 boolean gv_mqtt_conn_ok = true;
 boolean gv_reconnect_fail = false;
@@ -15,11 +17,17 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 
+
+
 const char MQTT_TOKEN_PREFIX[] PROGMEM = "%prefix%";  // To be substituted by mqtt_prefix[x]
 const char MQTT_TOKEN_TOPIC[] PROGMEM = "%topic%";    // To be substituted by mqtt_topic, mqtt_grptopic, mqtt_buttontopic, mqtt_switchtopic
 
 const uint16_t MQTT_TOPSZ = 151;                 // Max number of characters in topic string
 const uint16_t MQTT_CMDSZ = 24;                  // Max number of characters in command
+
+  char gv_mqtt_ptopic[MQTT_TOPSZ];
+
+enum mqtt_prefix {mqtt_pre_cmnd, mqtt_pre_stat, mqtt_pre_tele };
 
 char* mqtt_GetTopic_P(char *stopic, uint32_t prefix, char *topic, const char* subtopic)
 {
@@ -33,6 +41,7 @@ char* mqtt_GetTopic_P(char *stopic, uint32_t prefix, char *topic, const char* su
      prefix 9 = Stat topic
      prefix 10 = Tele topic
   */
+
   char romram[MQTT_CMDSZ];
   String fulltopic;
 
@@ -66,6 +75,23 @@ char* mqtt_GetTopic_P(char *stopic, uint32_t prefix, char *topic, const char* su
 
 }
 
+void pub_info2( ) {
+	String lv_clientname;
+	char lv_clientnamec[40];
+
+  lv_clientname = mqtt_clientname;
+  lv_clientname.toCharArray(lv_clientnamec, sizeof(lv_clientnamec));
+	
+  char buffer[256];
+  StaticJsonDocument<200> jsondoc;
+  jsondoc["Hostname"]  = mqtt_clientname;  
+  jsondoc["IPAddress"] = WiFi.localIP().toString();
+  
+  int n  = serializeJson(jsondoc, buffer);
+	
+
+  client.publish(mqtt_GetTopic_P(gv_mqtt_ptopic, mqtt_pre_tele, lv_clientnamec, (PGM_P)F("INFO2")), buffer, true);
+}
 
 // Class for SubTopics
 class MQTTSubTopic {
@@ -117,7 +143,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 
 boolean reconnect_mqtt() {
   String lv_lwt;
-  char lv_lwtc[40];
+  char lv_lwtc[80];
 
   DebugPrint(F("Attempting MQTT connection..."));
   // Attempt to connect
@@ -130,13 +156,16 @@ boolean reconnect_mqtt() {
     // Once connected, publish an announcement, retained
     client.publish(lv_lwtc, "online", true);
 
+	pub_info2();
+
+
     MQTTSubTopic *lv_SubTopic;
     for (int i = 0; i < gv_SubTopicList.size(); i++) {
 
-      // ... and resubscribe
-      lv_SubTopic = gv_SubTopicList.get(i);
-      client.subscribe(lv_SubTopic->topic);
-	    DebugPrint("Subscribed: ");
+    // ... and resubscribe
+    lv_SubTopic = gv_SubTopicList.get(i);
+    client.subscribe(lv_SubTopic->topic);
+	DebugPrint("Subscribed: ");
     DebugPrintln(lv_SubTopic->topic);	
     }
     return true;
@@ -168,7 +197,6 @@ boolean check_mqtt_conn() {
   }
 }
 
-
 void check_mqtt() {
   if (check_mqtt_conn()) {
 	  gv_mqtt_conn_ok = true;
@@ -178,7 +206,6 @@ void check_mqtt() {
 	  gv_mqtt_conn_ok = false;
   }
 }
-
 
 void check_mqtt_reset() {
   check_mqtt();
@@ -190,14 +217,15 @@ void check_mqtt_reset() {
    }
 }
 
-
 void init_mqtt(const char* iv_clientname) {
   DebugPrintln(F("init MQTT ...."));
   mqtt_clientname = iv_clientname;
-
+	
   client.setServer(mqtt_server, 1883);
   client.setCallback(mqtt_callback);
   //check_mqtt_conn();
 }
+
+
 
 #endif

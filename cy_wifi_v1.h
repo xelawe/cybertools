@@ -1,14 +1,25 @@
 /* WifiMan */
 
+#if defined(ESP8266)
+//#pragma message "ESP8266 Wifi!"
 
 #include <ESP8266WiFi.h>
 
 //needed for Wifi Manager library
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
+
+
+#elif defined(ESP32)
+//#pragma message "ESP32 Wifi"
+#include <WiFi.h>
+#include <WebServer.h>
+
+#else
+#error "This ain't a ESP8266 or ESP32, dumbo!"
+#endif
+
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
-
-
 
 
 String clientName;
@@ -84,7 +95,12 @@ void wifi_init(const char *iv_APname, int iv_portal_timeout, boolean iv_noconn_r
     delay(1000);
 	  if (gv_noconn_reset == true ){
     //reset and try again, or maybe put it to deep sleep
+		  
+#if defined(ESP8266)
     ESP.reset();
+#else
+	ESP.restart();	  
+#endif
    delay(5000);
 	  } else {	  
 	  return;
@@ -112,7 +128,11 @@ void check_wifi_conn() {
     DebugPrintln("Wifi not connected -> resetting!");
     delay(3000);
     //reset and try again
+#if defined(ESP8266)
     ESP.reset();
+#else
+	ESP.restart();	  
+#endif
     delay(5000);
   }
 }
